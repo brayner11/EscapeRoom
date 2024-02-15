@@ -34,27 +34,30 @@ const questions = {
       name: 'puzzle1',
       message: "Easy Puzzle 1: What color is the sky?",
       validate: function (answer) {
-        return answer.toLowerCase() === 'blue' || 'Incorrect answer! Try again.';
+        const isCorrect = answer.toLowerCase() === 'blue';
+        console.log(isCorrect ? 'Correct! You earned 10 points.' : 'Incorrect answer! Try again.');
+        return isCorrect || 'Incorrect answer! Try again.';
       },
-      points: 10,
     },
     {
       type: 'input',
       name: 'puzzle2',
       message: "Easy Puzzle 2: If you're running in a race and you pass the person in second place, what place are you in?",
       validate: function (answer) {
-        return answer.toLowerCase() === 'second place' || 'Incorrect answer! Try again.';
+        const isCorrect = answer.toLowerCase() === 'second place';
+        console.log(isCorrect ? 'Correct! You earned 10 points.' : 'Incorrect answer! Try again.');
+        return isCorrect || 'Incorrect answer! Try again.';
       },
-      points: 10,
     },
     {
       type: 'input',
       name: 'puzzle3',
       message: "Easy Puzzle 3: David's parents have three sons: Snap, Crackle, and what's the name of the third son?",
       validate: function (answer) {
-        return answer.toLowerCase() === 'david' || 'Incorrect answer! Try again.';
+        const isCorrect = answer.toLowerCase() === 'david';
+        console.log(isCorrect ? 'Correct! You earned 10 points.' : 'Incorrect answer! Try again.');
+        return isCorrect || 'Incorrect answer! Try again.';
       },
-      points: 10,
     },
   ],
   Medium: [
@@ -63,27 +66,30 @@ const questions = {
       name: 'puzzle1',
       message: "Medium Puzzle 1: What is the capital of France?",
       validate: function (answer) {
-        return answer.toLowerCase() === 'paris' || 'Incorrect answer! Try again.';
+        const isCorrect = answer.toLowerCase() === 'paris';
+        console.log(isCorrect ? 'Correct! You earned 20 points.' : 'Incorrect answer! Try again.');
+        return isCorrect;
       },
-      points: 20,
     },
     {
       type: 'input',
       name: 'puzzle2',
       message: "Medium Puzzle 2: What month of the year has 28 days?",
       validate: function (answer) {
-        return answer.toLowerCase() === 'all of them' || 'Incorrect answer! Try again.';
+        const isCorrect = answer.toLowerCase() === 'all of them';
+        console.log(isCorrect ? 'Correct! You earned 20 points.' : 'Incorrect answer! Try again.');
+        return isCorrect;
       },
-      points: 20,
     },
     {
       type: 'input',
       name: 'puzzle3',
       message: "Medium Puzzle 3: Mary has four daughters, and each of her daughters has a brother. How many children does Mary have?",
       validate: function (answer) {
-        return answer.toLowerCase() === 'five' || 'Incorrect answer! Try again.';
+        const isCorrect = answer.toLowerCase() === 'five';
+        console.log(isCorrect ? 'Correct! You earned 20 points.' : 'Incorrect answer! Try again.');
+        return isCorrect;
       },
-      points: 20,
     },
   ],
   Hard: [
@@ -92,27 +98,30 @@ const questions = {
       name: 'puzzle1',
       message: "Hard Puzzle 1: What is 3/7 chicken, 2/3 cat and 2/4 goat?",
       validate: function (answer) {
-        return answer.toLowerCase() === 'Chicago' || 'Incorrect answer! Try again.';
+        const isCorrect = answer.toLowerCase() === 'chicago';
+        console.log(isCorrect ? 'Correct! You earned 30 points.' : 'Incorrect answer! Try again.');
+        return isCorrect;
       },
-      points: 30,
     },
     {
       type: 'input',
       name: 'puzzle2',
       message: "Hard Puzzle 2: Forward I'm heavy, but backward I'm not. What am I?",
       validate: function (answer) {
-        return answer.toLowerCase() === 'ton' || 'Incorrect answer! Try again.';
+        const isCorrect = answer.toLowerCase() === 'ton';
+        console.log(isCorrect ? 'Correct! You earned 30 points.' : 'Incorrect answer! Try again.');
+        return isCorrect;
       },
-      points: 30,
     },
     {
       type: 'input',
       name: 'puzzle3',
       message: "Hard Puzzle 3: What gets wet while drying?",
       validate: function (answer) {
-        return answer.toLowerCase() === 'a towel' || 'Incorrect answer! Try again.';
+        const isCorrect = answer.toLowerCase() === 'a towel';
+        console.log(isCorrect ? 'Correct! You earned 30 points.' : 'Incorrect answer! Try again.');
+        return isCorrect;
       },
-      points: 30,
     },
   ],
 };
@@ -135,23 +144,58 @@ const calculateTotalPoints = (answers, difficulty) => {
   return totalPoints >= requiredPoints[difficulty];
 };
 
+const displayDifficultyMessage = (difficulty) => {
+  const requiredPoints = {
+    Easy: 30,
+    Medium: 40,
+    Hard: 90,
+  };
+  console.log(`To escape the ${difficulty} difficulty, you need ${requiredPoints[difficulty]} points.`);
+};
+
 const playEscapeRoom = async () => {
-  const difficulty = await inquirer.prompt(difficultyLevels);
-  console.log(`You've chosen ${difficulty.difficulty} difficulty.`);
+  let proceedToNextDifficulty = true;
 
-  displayIntroduction();
+  while (proceedToNextDifficulty) {
+    const difficulty = await inquirer.prompt(difficultyLevels);
+    console.log(`You've chosen ${difficulty.difficulty} difficulty.`);
+    displayDifficultyMessage(difficulty.difficulty);
+    displayIntroduction();
 
-  try {
-    const selectedQuestions = questions[difficulty.difficulty];
-    const answers = await inquirer.prompt(selectedQuestions);
+    try {
+      const selectedQuestions = questions[difficulty.difficulty];
+      const answers = {};
 
-    if (calculateTotalPoints(answers, difficulty.difficulty)) {
-      console.log(`Congratulations! You escaped the room with enough points!`);
-    } else {
-      console.log('Sorry, you could not escape. Better luck next time!');
+      for (const question of selectedQuestions) {
+        let isCorrect = false;
+        while (!isCorrect) {
+          const answer = await inquirer.prompt([question]);
+          isCorrect = answer[question.name];
+          answers[question.name] = isCorrect;
+        }
+      }
+
+      if (calculateTotalPoints(answers, difficulty.difficulty)) {
+        console.log(`Congratulations! You escaped the ${difficulty.difficulty} room with enough points!`);
+      } else {
+        console.log(`Sorry, you could not escape the ${difficulty.difficulty} room. Better luck next time!`);
+        proceedToNextDifficulty = false;
+      }
+
+      // Ask if the user wants to proceed to the next difficulty
+      if (proceedToNextDifficulty) {
+        const nextDifficultyPrompt = await inquirer.prompt({
+          type: 'confirm',
+          name: 'proceedToNextDifficulty',
+          message: 'Do you want to proceed to the next difficulty level?',
+        });
+
+        proceedToNextDifficulty = nextDifficultyPrompt.proceedToNextDifficulty;
+      }
+    } catch (error) {
+      console.log('Sorry, an error occurred. Better luck next time!');
+      proceedToNextDifficulty = false;
     }
-  } catch (error) {
-    console.log('Sorry, an error occurred. Better luck next time!');
   }
 };
 
