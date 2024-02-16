@@ -27,6 +27,24 @@ const difficultyLevels = [
   },
 ];
 
+const hints = {
+  Easy: [
+    'Hint for Easy Puzzle 1: Look up during the day.',
+    'Hint for Easy Puzzle 2: If you pass the person in second place, what is your new position?',
+    "Hint for Easy Puzzle 3: The answer is in the question. Who are David's parents?",
+  ],
+  Medium: [
+    'Hint for Medium Puzzle 1: Known as the "City of Love".',
+    'Hint for Medium Puzzle 2: How many days does February have in a leap year?',
+    'Hint for Medium Puzzle 3: Think about the relationships in the question.',
+  ],
+  Hard: [
+    'Hint for Hard Puzzle 1: This city is known for deep-dish pizza and jazz.',
+    'Hint for Hard Puzzle 2: Think about weight and direction.',
+    'Hint for Hard Puzzle 3: What item gets damp while performing its task?',
+  ],
+};
+
 const questions = {
   Easy: [
     {
@@ -127,63 +145,95 @@ const questions = {
 };
 
 const narrativeBranches = {
-    positive: [
-      'Congratulations! You successfully escaped the room and uncovered the hidden treasure.',
-      'As you step out, you find yourself in a beautiful garden. Your adventure continues...',
-    ],
-    negative: [
-      "Sorry, you couldn't escape the room. The walls seem to close in on you...",
-      "Suddenly, a mysterious figure appears. 'You're trapped forever,' they whisper. The end.",
-    ],
-  };
-  
-  const displayIntroduction = () => {
-    console.log(introMessage);
-  };
-  
-  const playEscapeRoom = async () => {
-    let proceedToNextDifficulty = true;
-  
-    while (proceedToNextDifficulty) {
-      const difficulty = await inquirer.prompt(difficultyLevels);
-      console.log(`You've chosen ${difficulty.difficulty} difficulty.`);
-      displayIntroduction();
-  
-      try {
-        const selectedQuestions = questions[difficulty.difficulty];
-        const answers = {};
-  
-        for (const question of selectedQuestions) {
-          let isCorrect = false;
-          while (!isCorrect) {
-            const answer = await inquirer.prompt([question]);
-            isCorrect = answer[question.name];
-            answers[question.name] = isCorrect;
+  positive: [
+    'Congratulations! You successfully escaped the room and uncovered the hidden treasure.',
+    'As you step out, you find yourself in a beautiful garden. Your adventure continues...',
+  ],
+  negative: [
+    "Sorry, you couldn't escape the room. The walls seem to close in on you...",
+    "Suddenly, a mysterious figure appears. 'You're trapped forever,' they whisper. The end.",
+  ],
+};
+
+const displayIntroduction = () => {
+  console.log(introMessage);
+};
+
+const provideHint = (difficulty, questionIndex) => {
+  if (hints[difficulty] && hints[difficulty][questionIndex]) {
+    console.log(`Hint: ${hints[difficulty][questionIndex]}`);
+  } else {
+    console.log('No hints available for this question.');
+  }
+};
+
+const playEscapeRoom = async () => {
+  let proceedToNextDifficulty = true;
+
+  while (proceedToNextDifficulty) {
+    const difficulty = await inquirer.prompt(difficultyLevels);
+    console.log(`You've chosen ${difficulty.difficulty} difficulty.`);
+    displayIntroduction();
+
+    try {
+      const selectedQuestions = questions[difficulty.difficulty];
+      const answers = {};
+
+      for (let i = 0; i < selectedQuestions.length; i++) {
+        let isCorrect = false;
+        let attempts = 0;
+
+        while (!isCorrect && attempts < 3) {
+          const answer = await inquirer.prompt([selectedQuestions[i]]);
+          isCorrect = answer[selectedQuestions[i].name];
+
+          if (!isCorrect) {
+            attempts++;
+
+            const hintPrompt = await inquirer.prompt({
+              type: 'confirm',
+              name: 'useHint',
+              message: 'Would you like a hint?',
+            });
+
+            if (hintPrompt.useHint) {
+              provideHint(difficulty.difficulty, i);
+            }
+
+            console.log(`Incorrect answer! Attempts left: ${3 - attempts}`);
           }
         }
-  
-        if (Object.values(answers).every((answer) => answer)) {
-          console.log(narrativeBranches.positive.join('\n'));
-        } else {
-          console.log(narrativeBranches.negative.join('\n'));
-          proceedToNextDifficulty = false;
+
+        answers[selectedQuestions[i].name] = isCorrect;
+
+        if (!isCorrect) {
+          console.log('Sorry, you could not solve the puzzle. Better luck next time!');
+          break; // Break out of the loop if the answer is incorrect
         }
-  
-        // Ask if the user wants to proceed to the next difficulty
-        if (proceedToNextDifficulty) {
-          const nextDifficultyPrompt = await inquirer.prompt({
-            type: 'confirm',
-            name: 'proceedToNextDifficulty',
-            message: 'Do you want to proceed to the next difficulty level?',
-          });
-  
-          proceedToNextDifficulty = nextDifficultyPrompt.proceedToNextDifficulty;
-        }
-      } catch (error) {
-        console.log('Sorry, an error occurred. Better luck next time!');
+      }
+
+      if (Object.values(answers).every((answer) => answer)) {
+        console.log(narrativeBranches.positive.join('\n'));
+      } else {
+        console.log(narrativeBranches.negative.join('\n'));
         proceedToNextDifficulty = false;
       }
+
+      // Ask if the user wants to proceed to the next difficulty
+      if (proceedToNextDifficulty) {
+        const nextDifficultyPrompt = await inquirer.prompt({
+          type: 'confirm',
+          name: 'proceedToNextDifficulty',
+          message: 'Do you want to proceed to the next difficulty level?',
+        });
+
+        proceedToNextDifficulty = nextDifficultyPrompt.proceedToNextDifficulty;
+      }
+    } catch (error) {
+      console.log('Sorry, an error occurred. Better luck next time!');
+      proceedToNextDifficulty = false;
     }
-  };
-  
-  playEscapeRoom();
+  }
+};
+
+playEscapeRoom();
