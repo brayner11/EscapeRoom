@@ -11,7 +11,7 @@ const introMessage = `
 //////// ////////    //////  //      // //       ////////   //     //   ///////     ///////   //         // 
 Welcome to the Escape Room Adventure!
 
-You find yourself trapped in a mysterious room with only one way out - by solving a series of challenging puzzles. Your wit and creativity will be your keys to freedom. Can you escape?
+You find yourself trapped in a mysterious room with only one way out - by solving a series of challenging puzzles. Your wit and creativity will be your keys to freedom. choose the difficulty.Can you escape?
 
 Get ready to embark on a thrilling journey of intellect and discovery. Pay attention to the details, think outside the box, and most importantly, enjoy the adventure.
 
